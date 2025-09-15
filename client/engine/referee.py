@@ -12,50 +12,31 @@ TIME_LIMIT_MS = 500
 MAX_TURNS = 500
 # -----------------------------------
 
+# ... (get_game_state and get_json_for_bot functions are unchanged) ...
 def get_game_state(turn, board, p1, p2):
-    """Creates a dictionary representing the current game state for logging."""
     return {
         "turn": turn,
         "board": { "width": board.width, "height": board.height },
-        "p1": {
-            "head": {"x": p1.head[0], "y": p1.head[1]},
-            "body": [{"x": pos[0], "y": pos[1]} for pos in p1.body],
-            "alive": p1.is_alive
-        },
-        "p2": {
-            "head": {"x": p2.head[0], "y": p2.head[1]},
-            "body": [{"x": pos[0], "y": pos[1]} for pos in p2.body],
-            "alive": p2.is_alive
-        }
+        "p1": { "id": "p1", "head": {"x": p1.head[0], "y": p1.head[1]}, "body": [{"x": pos[0], "y": pos[1]} for pos in p1.body], "direction": p1.direction, "alive": p1.is_alive },
+        "p2": { "id": "p2", "head": {"x": p2.head[0], "y": p2.head[1]}, "body": [{"x": pos[0], "y": pos[1]} for pos in p2.body], "direction": p2.direction, "alive": p2.is_alive }
     }
 
 def get_json_for_bot(turn_state, player_key, opponent_key):
-    """Builds the specific JSON string that a bot receives."""
     you = turn_state[player_key]
     opponent = turn_state[opponent_key]
-
     grid = [[0 for _ in range(turn_state["board"]["height"])] for _ in range(turn_state["board"]["width"])]
-    for part in you["body"]:
-        grid[part["x"]][part["y"]] = 1
-    for part in opponent["body"]:
-        grid[part["x"]][part["y"]] = 2
-
+    for part in you["body"]: grid[part["x"]][part["y"]] = 1
+    for part in opponent["body"]: grid[part["x"]][part["y"]] = 2
     grid_str = ["".join(map(str, [grid[x][y] for x in range(turn_state["board"]["width"])])) for y in range(turn_state["board"]["height"])]
-    
-    # --- THIS IS THE FIX ---
-    # Create a new board object for the bot and put the grid inside it.
     board_for_bot = turn_state["board"].copy()
     board_for_bot["grid"] = grid_str
-
     bot_view = {
         "turn": turn_state["turn"],
-        "board": board_for_bot, # Use the corrected board object
-        # "grid" is no longer a top-level key
+        "board": board_for_bot,
         "you": { "id": player_key, "head": you["head"], "body": you["body"], "length": len(you["body"]) },
         "opponent": { "id": opponent_key, "head": opponent["head"], "body": opponent["body"], "length": len(opponent["body"]) },
     }
     return json.dumps(bot_view)
-# -----------------------
 
 def main():
     bot1_cmd_str, bot2_cmd_str = sys.argv[1], sys.argv[2]
@@ -69,12 +50,16 @@ def main():
     game_log = {"frames": [], "result": {}}
     turn = 0
     
-    while all(s.is_alive for s in snakes) and turn < MAX_TURNS:
-        current_state = get_game_state(turn, board, snakes[0], snakes[1])
-        game_log["frames"].append(current_state)
+    # --- BUG FIX: Corrected Game Loop Logic ---
+    # Log the initial state (Frame 0)
+    game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
 
-        p1_json = get_json_for_bot(current_state, "p1", "p2")
-        p2_json = get_json_for_bot(current_state, "p2", "p1")
+    while all(s.is_alive for s in snakes) and turn < MAX_TURNS:
+        turn += 1
+        current_state_for_bots = get_game_state(turn, board, snakes[0], snakes[1])
+
+        p1_json = get_json_for_bot(current_state_for_bots, "p1", "p2")
+        p2_json = get_json_for_bot(current_state_for_bots, "p2", "p1")
 
         p1_proc.stdin.write(p1_json + "\n"); p1_proc.stdin.flush()
         p2_proc.stdin.write(p2_json + "\n"); p2_proc.stdin.flush()
@@ -84,13 +69,26 @@ def main():
             p2_move = json.loads(p2_proc.stdout.readline().strip())["move"]
         except (IOError, json.JSONDecodeError):
             snakes[0].is_alive = False; snakes[1].is_alive = False
+            # Log the final state after the error
+            game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
             break
+        
+        # 1. Move the snakes
+        snakes[0].move(p1_move)
+        snakes[1].move(p2_move)
 
-        snakes[0].move(p1_move); snakes[1].move(p2_move)
+        # 2. Log the state AFTER they move but BEFORE checking for death
+        game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
+
+        # 3. Now, check for collisions
         board.update(snakes)
-        turn += 1
 
-    game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
+        # If a snake died, the final state is already logged. We just need to update it
+        # with the 'alive: false' status for the next frame's info panel
+        if not all(s.is_alive for s in snakes):
+             game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
+
+    # --- End of Loop ---
 
     p1_alive, p2_alive = snakes[0].is_alive, snakes[1].is_alive
     winner = "Draw"

@@ -1,12 +1,96 @@
+:root {
+    --bg-color: #1e2228;
+    --panel-bg: #282c34;
+    --border-color: #61afef;
+    --text-color: #abb2bf;
+    --p1-color: '#61afef'; /* Blue */
+    --p2-color: '#e06c75'; /* Red */
+    --p1-head: '#98c379';  /* Green */
+    --p2-head: '#e5c07b';  /* Yellow */
+    --dead-color: '#e06c75';
+}
 body {
-    font-family: sans-serif;
-    background-color: #282c34;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 20px;
+}
+header { text-align: center; margin-bottom: 20px; }
+h1 { color: white; margin-bottom: 0; }
+.tagline { margin-top: 5px; font-style: italic; }
+
+/* New 2-column grid layout */
+.main-container {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+    align-items: flex-start;
+    max-width: 1600px;
+    margin: 0 auto;
+}
+.left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.panel {
+    background-color: var(--panel-bg);
+    border-radius: 8px;
+    padding: 20px;
+}
+.visualizer-panel { text-align: center; }
+#tronCanvas { border: 1px solid var(--border-color); width: 100%; height: auto; }
+
+/* Form and Controls */
+.form-group { margin-bottom: 15px; text-align: left; }
+.form-group label { display: block; margin-bottom: 5px; font-size: 0.9em; }
+input[type="text"], select {
+    width: calc(100% - 16px);
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #3b4048;
+    background-color: #1e2228;
     color: white;
+}
+.editable-field { display: flex; align-items: center; }
+.editable-field span { flex-grow: 1; }
+.hidden { display: none; }
+button {
+    padding: 10px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.primary-btn { background-color: #61afef; color: white; }
+.secondary-btn { background-color: #3b4048; color: var(--text-color); }
+.icon-btn { background: none; border: none; color: var(--text-color); font-size: 1.2em; cursor: pointer; padding: 5px; }
+.icon-btn:hover { color: white; }
+.action-buttons { display: flex; gap: 10px; margin-top: 20px; }
+.action-buttons button { flex: 1; justify-content: center; }
+
+/* Replay Controls */
+.replay-controls { display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 10px; }
+.scrubber { width: 100%; margin-top: 10px; }
+
+#speedDisplay {
+    min-width: 4ch; /* Reserve space for about 4 characters */
+    text-align: left;
+}
+
+/* Info Panel */
+#resultDisplay { color: white; font-size: 1.5em; margin-bottom: 20px; min-height: 1.5em; }
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px 5px;
     text-align: center;
 }
-.controls { margin-bottom: 20px; }
-input, select, button { padding: 8px; margin: 5px; border-radius: 5px; border: none; }
-button { background-color: #61afef; color: white; cursor: pointer; }
-button:hover { background-color: #528baf; }
-#tronCanvas { background-color: #1e2228; border: 1px solid #61afef; }
-#resultDisplay { margin-top: 10px; font-size: 1.2em; font-weight: bold; }
+.info-header { font-weight: bold; color: white; }
+.info-label { text-align: right; font-weight: bold; }
+#turnDisplay { grid-column: 2 / 4; }
+

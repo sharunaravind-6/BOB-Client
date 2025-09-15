@@ -2,24 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Tron Bot Battle</title>
+    <title>Big-O-Battle</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
 <body>
-    <h1>Tron Bot Battle Client</h1>
-    <div class="controls">
-        <input type="text" id="teamName" placeholder="Your Team Name">
-        <select id="language">
-            <option value="python">Python</option>
-            <option value="java">Java</option>
-        </select>
-        <input type="text" id="botPath" placeholder="Path to bot folder (e.g., bots/java_random_bot)">
-        <button id="runMatchBtn">Run Match</button>
-    </div>
-    <div class="visualizer">
-        <canvas id="tronCanvas" width="600" height="400"></canvas>
-        <div id="resultDisplay"></div>
-    </div>
+
+    <header>
+        <h1>Big-O-Battle</h1>
+        <p class="tagline">May the odds be ever in your algorithm's favour.</p>
+    </header>
+
+    <main class="main-container">
+        <div class="left-column">
+            <div class="panel setup-panel">
+                <h2>Setup</h2>
+                <div class="form-group">
+                    <label for="teamName">Team Name</label>
+                    <div class="editable-field">
+                        <span id="teamNameDisplay">MyAwesomeTeam</span>
+                        <button id="editNameBtn" class="icon-btn"><i class="fas fa-pencil-alt"></i></button>
+                        <input type="text" id="teamNameInput" class="hidden" value="MyAwesomeTeam">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="language">Language</label>
+                    <select id="language">
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="botPath">Bot Path</label>
+                    <input type="text" id="botPath" value="bots/my_test_bot">
+                </div>
+                <div class="action-buttons">
+                    <button id="runMatchBtn" class="primary-btn">
+                        <i class="fas fa-play"></i> Test Bot
+                        <!-- <i id="loadingSpinner" class="fas fa-spinner fa-spin hidden"></i> -->
+                    </button>
+                    <button id="submitBtn" class="secondary-btn"><i class="fas fa-upload"></i> Submit</button>
+                </div>
+            </div>
+
+            <div class="panel info-panel">
+                <h2 id="resultDisplay">Run a Match!</h2>
+                <div class="info-grid">
+                    <div class="info-header"></div>
+                    <div class="info-header">Player 1 (Blue)</div>
+                    <div class="info-header">Player 2 (Red)</div>
+                    
+                    <div class="info-label">Status</div>
+                    <div id="p1Status">-</div>
+                    <div id="p2Status">-</div>
+
+                    <div class="info-label">Length</div>
+                    <div id="p1Length">-</div>
+                    <div id="p2Length">-</div>
+
+                    <div class="info-label">Turn</div>
+                    <div id="turnDisplay" colspan="2">- / -</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel visualizer-panel">
+            <canvas id="tronCanvas" width="800" height="533"></canvas>
+            <div class="replay-controls">
+                <button id="restartBtn" class="icon-btn" title="Restart"><i class="fas fa-redo"></i></button>
+                <button id="stepBackBtn" class="icon-btn" title="Step Back"><i class="fas fa-step-backward"></i></button>
+                <button id="playPauseBtn" class="icon-btn" title="Play/Pause"><i class="fas fa-play"></i></button>
+                <button id="stepFwdBtn" class="icon-btn" title="Step Forward"><i class="fas fa-step-forward"></i></button>
+                <i class="fas fa-tachometer-alt" title="Speed"></i>
+                <input type="range" id="speedSlider" min="0.25" max="4" value="1" step="0.25">
+                <span id="speedDisplay">1.00x</span>
+            </div>
+            <input type="range" id="scrubber" class="scrubber" value="0" step="1">
+        </div>
+    </main>
+
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
