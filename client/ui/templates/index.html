@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tron Bot Battle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Tron Bot Battle Client</h1>
+    <div class="controls">
+        <input type="text" id="teamName" placeholder="Your Team Name">
+        <select id="language">
+            <option value="python">Python</option>
+            <option value="java">Java</option>
+        </select>
+        <input type="text" id="botPath" placeholder="Path to bot folder (e.g., bots/java_random_bot)">
+        <button id="runMatchBtn">Run Match</button>
+    </div>
+    <div class="visualizer">
+        <canvas id="tronCanvas" width="600" height="400"></canvas>
+        <div id="resultDisplay"></div>
+    </div>
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>

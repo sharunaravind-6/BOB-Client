@@ -1,0 +1,12 @@
+body {
+    font-family: sans-serif;
+    background-color: #282c34;
+    color: white;
+    text-align: center;
+}
+.controls { margin-bottom: 20px; }
+input, select, button { padding: 8px; margin: 5px; border-radius: 5px; border: none; }
+button { background-color: #61afef; color: white; cursor: pointer; }
+button:hover { background-color: #528baf; }
+#tronCanvas { background-color: #1e2228; border: 1px solid #61afef; }
+#resultDisplay { margin-top: 10px; font-size: 1.2em; font-weight: bold; }
