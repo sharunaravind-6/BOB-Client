@@ -73,21 +73,52 @@ def main():
             game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
             break
         
-        # 1. Move the snakes
-        snakes[0].move(p1_move)
-        snakes[1].move(p2_move)
+        # # 1. Move the snakes
+        # snakes[0].move(p1_move)
+        # snakes[1].move(p2_move)
 
-        # 2. Log the state AFTER they move but BEFORE checking for death
-        game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
+        # # 2. Log the state AFTER they move but BEFORE checking for death
+        # game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
 
-        # 3. Now, check for collisions
+        # # 3. Now, check for collisions
+        # board.update(snakes)
+
+        # # If a snake died, the final state is already logged. We just need to update it
+        # # with the 'alive: false' status for the next frame's info panel
+        # if not all(s.is_alive for s in snakes):
+        #      game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
+
+        # 1. First, update each snake's intended direction based on its move.
+        #    We do this before checking if the move is fatal.
+        if snakes[0].is_alive:
+            # This is an example of strict move validation we can add later
+            if p1_move in {"UP", "DOWN", "LEFT", "RIGHT"}:
+                snakes[0].direction = {"UP":(0,-1), "DOWN":(0,1), "LEFT":(-1,0), "RIGHT":(1,0)}[p1_move]
+
+        if snakes[1].is_alive:
+            if p2_move in {"UP", "DOWN", "LEFT", "RIGHT"}:
+                snakes[1].direction = {"UP":(0,-1), "DOWN":(0,1), "LEFT":(-1,0), "RIGHT":(1,0)}[p2_move]
+
+        # 2. Now, use our new function to check if the move leads to death.
+        #    This happens BEFORE the snake actually moves.
+        if snakes[0].is_alive and board.is_fatal_move(snakes[0], snakes[1]):
+            snakes[0].is_alive = False
+        
+        if snakes[1].is_alive and board.is_fatal_move(snakes[1], snakes[0]):
+            snakes[1].is_alive = False
+
+        # 3. Only move the snakes that are still alive after the checks.
+        if snakes[0].is_alive:
+            snakes[0].move(p1_move)
+        
+        if snakes[1].is_alive:
+            snakes[1].move(p2_move)
+
+        # 4. Do a final check for head-on collisions.
         board.update(snakes)
 
-        # If a snake died, the final state is already logged. We just need to update it
-        # with the 'alive: false' status for the next frame's info panel
-        if not all(s.is_alive for s in snakes):
-             game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
-
+        # 5. Log the final state of this turn.
+        game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
     # --- End of Loop ---
 
     p1_alive, p2_alive = snakes[0].is_alive, snakes[1].is_alive
