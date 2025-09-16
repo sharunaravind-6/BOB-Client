@@ -96,6 +96,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (data.status === 'complete') {
                     clearInterval(pollingInterval);
+                    
+                    const log = data.log;
+                    let errorFound = false;
+                    if (log.debug_info && log.debug_info.move_details) {
+                        for (const turn of log.debug_info.move_details) {
+                            if (turn.p1_response.error) {
+                                resultDisplay.textContent = `P1 Error on Turn ${turn.turn}: ${turn.p1_response.error}`;
+                                errorFound = true;
+                                break; // Stop after finding the first error
+                            }
+                            if (turn.p2_response.error) {
+                                resultDisplay.textContent = `P2 Error on Turn ${turn.turn}: ${turn.p2_response.error}`;
+                                errorFound = true;
+                                break;
+                            }
+                        }
+                    }
+
 
                     // --- NEW DEBUG LOGGING ---
                     if (data.log && data.log.debug_info) {
@@ -118,7 +136,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     // --- END OF NEW LOGGING ---
 
-                    resultDisplay.textContent = data.log.result.winner;
+                    if(!errorFound){
+                        resultDisplay.textContent = data.log.result.winner;
+                    }
                     gameFrames = data.log.frames;
                     runBtn.disabled = false;
                     setupAnimation();
