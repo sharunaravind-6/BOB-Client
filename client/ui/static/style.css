@@ -109,3 +109,14 @@ button {
     text-overflow: ellipsis;
     padding-right: 10px;
 }
+
+.player-card {
+    border: 1px solid #3b4048;
+    border-radius: 5px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+.player-card h3 {
+    margin-top: 0;
+    text-align: center;
+}

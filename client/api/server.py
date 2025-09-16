@@ -14,19 +14,45 @@ app = Flask(__name__, template_folder='../ui/templates', static_folder='../ui/st
 # A simple in-memory dictionary to store the results of finished matches
 match_results = {}
 
-def run_match_in_background(match_id, bot_path, language, opponent_image):
+def run_match_in_background(match_id, p1_path, p2_path, cpu_bot_name):
     """The function that will run in a separate thread."""
 
-    bot_directory = os.path.dirname(bot_path)
-    bot_filename = os.path.basename(bot_path)
-    result_json_str = run_docker_match(bot_directory, bot_filename, language, opponent_image)
-    # result_json_str = run_docker_match(bot_path, language, opponent_image) #old one where we had our own script.
+    # --- Player 1 Setup ---
+    p1_dir = os.path.dirname(p1_path)
+    p1_filename = os.path.basename(p1_path)
+    _, p1_ext = os.path.splitext(p1_filename)
+    p1_lang = {".py": "python", ".java": "java"}.get(p1_ext)
+
+    if not p1_lang:
+        match_results[match_id] = {"status": "error", "log": {"error": f"P1: Unsupported file type: {p1_ext}"}}
+        return
+
+    # --- Player 2 Setup ---
+    p2_is_cpu = (p2_path == 'cpu')
+    p2_dir, p2_filename, p2_lang = None, None, None
+    if not p2_is_cpu:
+        p2_dir = os.path.dirname(p2_path)
+        p2_filename = os.path.basename(p2_path)
+        _, p2_ext = os.path.splitext(p2_filename)
+        p2_lang = {".py": "python", ".java": "java"}.get(p2_ext)
+        if not p2_lang:
+            match_results[match_id] = {"status": "error", "log": {"error": f"P2: Unsupported file type: {p2_ext}"}}
+            return
+
+    result_json_str = run_docker_match(
+        p1_dir, p1_filename, p1_lang,
+        p2_dir, p2_filename, p2_lang,
+        cpu_bot_name
+    )
+
     try:
         game_log = json.loads(result_json_str)
         match_results[match_id] = {"status": "complete", "log": game_log}
     except json.JSONDecodeError:
         error_log = {"error": "Failed to parse game log", "raw_output": result_json_str}
         match_results[match_id] = {"status": "error", "log": error_log}
+
+
 
 @app.route('/')
 def index():
@@ -35,27 +61,22 @@ def index():
 @app.route('/run-match', methods=['POST'])
 def handle_run_match():
     data = request.get_json()
-    language = data.get('language')
-    bot_path = data.get('bot_path')
-    
-    if not language or not bot_path:
-        return jsonify({"error": "Missing 'language' or 'bot_path'"}), 400
+    p1_path = data.get('p1_path')
+    p2_path = data.get('p2_path')
+    cpu_bot_name = data.get('cpu_bot_name')
+
+    if not p1_path or not p2_path:
+        return jsonify({"error": "Missing bot path for P1 or P2"}), 400
 
     match_id = str(uuid.uuid4())
-    opponent_image = "competition/random-bot"
-    
-    # Set initial status
     match_results[match_id] = {"status": "running"}
 
-    # Start the long-running task in a background thread
     thread = threading.Thread(
         target=run_match_in_background,
-        args=(match_id, bot_path, language, opponent_image)
+        args=(match_id, p1_path, p2_path, cpu_bot_name)
     )
     thread.daemon = True
     thread.start()
-
-    # Return immediately with the match ID
     return jsonify({"status": "started", "match_id": match_id})
 
 @app.route('/match-status/<match_id>', methods=['GET'])

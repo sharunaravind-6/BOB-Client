@@ -17,37 +17,50 @@
         <div class="left-column">
             <div class="panel setup-panel">
                 <h2>Setup</h2>
+            <div class="player-card">
+                <h3>Player 1 (You)</h3>
                 <div class="form-group">
-                    <label for="teamName">Team Name</label>
-                    <div class="editable-field">
-                        <span id="teamNameDisplay">MyAwesomeTeam</span>
-                        <button id="editNameBtn" class="icon-btn"><i class="fas fa-pencil-alt"></i></button>
-                        <input type="text" id="teamNameInput" class="hidden" value="MyAwesomeTeam">
+                    <label>Bot File</label>
+                    <div class="file-selector">
+                        <span id="botPathDisplayP1">No file selected...</span>
+                        <button class="browseBtn" data-player="P1">Browse...</button>
                     </div>
                 </div>
+            </div>
+
+            <div class="player-card">
+                <h3>Player 2 (Opponent)</h3>
                 <div class="form-group">
-                    <label for="language">Language</label>
-                    <select id="language">
-                        <option value="python">Python</option>
-                        <option value="java">Java</option>
+                    <label>Opponent Type</label>
+                    <select id="opponentType">
+                        <option value="cpu">CPU (Easy)</option>
+                        <option value="human">Select Local Bot</option>
                     </select>
                 </div>
-                <div class="form-group">
-                    <!-- <label for="botPath">Bot Path</label>
-                    <input type="text" id="botPath" value="bots/my_test_bot"> -->
-                    <label for="botPath">Bot Path</label>
+                <div class="form-group" id="p2FileSelector" class="hidden">
+                    <label>Bot File</label>
                     <div class="file-selector">
-                        <span id="botPathDisplay">No Folder selected...</span>
-                    <button id="browseBtn">Browse...</button>
+                        <span id="botPathDisplayP2">No file selected...</span>
+                        <button class="browseBtn" data-player="P2">Browse...</button>
+                    </div>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label for="teamName">Team Name</label>
+                <div class="editable-field">
+                    <span id="teamNameDisplay">MyAwesomeTeam</span>
+                    <button id="editNameBtn" class="icon-btn"><i class="fas fa-pencil-alt"></i></button>
+                    <input type="text" id="teamNameInput" class="hidden" value="MyAwesomeTeam">
                 </div>
-                <div class="action-buttons">
-                    <button id="runMatchBtn" class="primary-btn">
-                        <i class="fas fa-play"></i> Test Bot
-                        <!-- <i id="loadingSpinner" class="fas fa-spinner fa-spin hidden"></i> -->
-                    </button>
-                    <button id="submitBtn" class="secondary-btn"><i class="fas fa-upload"></i> Submit</button>
-                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button id="runMatchBtn" class="primary-btn">
+                    <i class="fas fa-play"></i> Test Match
+                </button>
+                <button id="submitBtn" class="secondary-btn"><i class="fas fa-upload"></i> Submit</button>
+            </div>
             </div>
 
             <div class="panel info-panel">

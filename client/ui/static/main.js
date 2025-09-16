@@ -13,8 +13,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const editNameBtn = document.getElementById('editNameBtn');
     const teamNameDisplay = document.getElementById('teamNameDisplay');
     const teamNameInput = document.getElementById('teamNameInput');
-    const botPathDisplay = document.getElementById('botPathDisplay');
-    const browseBtn = document.getElementById('browseBtn');
+
+
+    // const botPathDisplay = document.getElementById('botPathDisplay');
+    // const browseBtn = document.getElementById('browseBtn');
+
+    // Player 1
+    const botPathDisplayP1 = document.getElementById('botPathDisplayP1');
+    // Player 2
+    const opponentType = document.getElementById('opponentType');
+    const p2FileSelector = document.getElementById('p2FileSelector');
+    const botPathDisplayP2 = document.getElementById('botPathDisplayP2');
+
+    // Get both browse buttons
+    const browseBtns = document.querySelectorAll('.browseBtn');
     
     // Visualizer
     const canvas = document.getElementById('tronCanvas');
@@ -46,16 +58,34 @@ document.addEventListener('DOMContentLoaded', () => {
     stepFwdBtn.addEventListener('click', () => step(1));
     speedSlider.addEventListener('input', handleSpeedChange);
     scrubber.addEventListener('input', handleScrubberChange);
-    browseBtn.addEventListener('click', selectBotFile);
+    // browseBtn.addEventListener('click', selectBotFile);
+    opponentType.addEventListener('change', handleOpponentTypeChange);
+    browseBtns.forEach(btn => btn.addEventListener('click', selectBotFile));
 
     // --- CORE LOGIC ---
 
+    function handleOpponentTypeChange() 
+    {
+        if (opponentType.value === 'human') {
+            p2FileSelector.classList.remove('hidden');
+        } else {
+            p2FileSelector.classList.add('hidden');
+        }
+    }
+
+    // Call it once at the start to set the initial state
+    handleOpponentTypeChange();
+    
     async function selectBotFile() 
     {
-        // This 'pywebview.api.select_folder' calls the Python function we exposed.
+        const player = event.target.dataset.player; // Gets "P1" or "P2" from the button
         const path = await window.pywebview.api.select_file();
         if (path) {
-            botPathDisplay.textContent = path;
+            if (player === 'P1') {
+                botPathDisplayP1.textContent = path;
+            } else {
+                botPathDisplayP2.textContent = path;
+            }
         }
     }
 
@@ -75,11 +105,22 @@ document.addEventListener('DOMContentLoaded', () => {
         resultDisplay.innerHTML = 'Requesting match... <i class="fas fa-spinner fa-spin"></i>';
         runBtn.disabled = true;
 
+        // const payload = {
+        //     // language: document.getElementById('language').value,
+        //     bot_path: botPathDisplay.textContent, // Read from the display span now
+        //     team_name: teamNameDisplay.textContent
+        //     };
+        const p1_bot_path = botPathDisplayP1.textContent;
+        const opponent_selection = opponentType.value;
+        const p2_bot_path = (opponent_selection === 'human') ? botPathDisplayP2.textContent : 'cpu';
+
         const payload = {
-            language: document.getElementById('language').value,
-            bot_path: botPathDisplay.textContent, // Read from the display span now
-            team_name: teamNameDisplay.textContent
-    };
+            team_name: teamNameDisplay.textContent,
+            p1_path: p1_bot_path,
+            p2_path: p2_bot_path,
+            // We'll also tell the backend which CPU bot to use if selected
+            cpu_bot_name: (opponent_selection === 'cpu') ? 'competition/random-bot' : null
+        };
 
         try {
             const response = await fetch('/run-match', {

@@ -8,7 +8,7 @@ BOARD_HEIGHT = 20
 # Time limit for a bot to make a single move, in milliseconds
 TIME_LIMIT_MS = 200
 
-FIRST_MOVE_TIME_LIMIT_MS = 3000 # 3 seconds
+FIRST_MOVE_TIME_LIMIT_MS = 4000 # 3 seconds
 
 # The maximum number of turns a game can last before it's declared a draw
 MAX_TURNS = 500

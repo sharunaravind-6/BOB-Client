@@ -15,18 +15,12 @@ def get_base_image_for_language(language):
     }
     return lang_map.get(language.lower())
 
-def run_docker_match(user_bot_directory,user_bot_filename, user_language, opponent_image_name):
+def run_docker_match(p1_dir, p1_filename, p1_lang, p2_dir, p2_filename, p2_lang, cpu_bot_name):
     """
-    Runs a Tron match inside Docker containers by mounting user code.
+    Runs a Tron match between two opponents, who can be user bots or a CPU.
     """
     client = docker.from_env()
     
-    user_base_image = get_base_image_for_language(user_language)
-    if not user_base_image:
-        return f"Error: Language '{user_language}' is not supported."
-    
-    print(f"INFO: Preparing match: {user_language.capitalize()} Bot vs {opponent_image_name}")
-
     # Create a Docker network if it doesn't exist
     network_name = "tron-battle"
     try:
@@ -39,33 +33,53 @@ def run_docker_match(user_bot_directory,user_bot_filename, user_language, oppone
     result = "Referee Error"
 
     try:
-        # --- 1. Start user container from base image, mounting their code ---
-        print(f"INFO: Starting user container from '{user_base_image}'...")
+        # --- 1. Player 1 Setup (always a user bot) ---
+        p1_base_image = get_base_image_for_language(p1_lang)
+        if not p1_base_image:
+            return json.dumps({"error": f"P1: Language '{p1_lang}' not supported."})
+
+        print(f"INFO: Starting P1 container from '{p1_base_image}'...")
         user_container = client.containers.run(
-            image=user_base_image,
+            image=p1_base_image,
             detach=True,
             network=network_name,
-            volumes={os.path.abspath(user_bot_directory): {'bind': '/app', 'mode': 'rw'}},
+            volumes={os.path.abspath(p1_dir): {'bind': '/app', 'mode': 'rw'}},
             working_dir='/app',
             tty=True # Keeps container alive
         )
+        bot1_cmd = f"docker exec -i {user_container.id} ./run.sh {p1_filename}"
 
-        # --- 2. Start opponent container ---
-        print(f"INFO: Starting opponent container from '{opponent_image_name}'...")
-        opponent_container = client.containers.run(
-            opponent_image_name, 
-            detach=True, 
-            network=network_name,
-            tty=True
-        )
+        # --- 2. Player 2 Setup (can be CPU or another user bot) ---
+        if cpu_bot_name:
+            # --- Scenario: Player vs. CPU ---
+            print(f"INFO: Starting P2 (CPU) container from '{cpu_bot_name}'...")
+            opponent_container = client.containers.run(
+                cpu_bot_name, 
+                detach=True, 
+                network=network_name,
+                tty=True
+            )
+            # The CPU bot's filename is always bot.py inside its image
+            bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh bot.py"
+        else:
+            # --- Scenario: Player vs. Player ---
+            p2_base_image = get_base_image_for_language(p2_lang)
+            if not p2_base_image:
+                return json.dumps({"error": f"P2: Language '{p2_lang}' not supported."})
+
+            print(f"INFO: Starting P2 container from '{p2_base_image}'...")
+            opponent_container = client.containers.run(
+                image=p2_base_image,
+                detach=True,
+                network=network_name,
+                volumes={os.path.abspath(p2_dir): {'bind': '/app', 'mode': 'rw'}},
+                working_dir='/app',
+                tty=True
+            )
+            bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh {p2_filename}"
 
         # --- 3. Run the Referee on the Host ---
         print("INFO: Starting referee...")
-        # bot1_cmd = f"docker exec -i {user_container.id} ./run.sh"
-        bot1_cmd = f"docker exec -i {user_container.id} ./run.sh {user_bot_filename}"
-        # bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh"
-        bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh bot.py"
-
         referee_process = subprocess.run(
             [sys.executable, "-m", "client.engine.referee", bot1_cmd, bot2_cmd],
             capture_output=True, text=True
@@ -88,9 +102,7 @@ def run_docker_match(user_bot_directory,user_bot_filename, user_language, oppone
             opponent_container.stop()
             opponent_container.remove()
         print("INFO: Match finished.")
-
-
-
+        
     return result
 
 if __name__ == '__main__':
