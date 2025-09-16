@@ -4,12 +4,17 @@ import json
 import subprocess
 import shlex
 from .game import Snake, Board
+import config
+import threading
+import time
+
 
 # --- Configurable Game Constants ---
-BOARD_WIDTH = 30
-BOARD_HEIGHT = 20
-TIME_LIMIT_MS = 500
-MAX_TURNS = 500
+BOARD_WIDTH = config.BOARD_WIDTH
+BOARD_HEIGHT = config.BOARD_HEIGHT
+TIME_LIMIT_MS = config.TIME_LIMIT_MS
+FIRST_MOVE_TIME_LIMIT_MS = config.FIRST_MOVE_TIME_LIMIT_MS
+MAX_TURNS = config.MAX_TURNS
 # -----------------------------------
 
 # ... (get_game_state and get_json_for_bot functions are unchanged) ...
@@ -38,17 +43,51 @@ def get_json_for_bot(turn_state, player_key, opponent_key):
     }
     return json.dumps(bot_view)
 
+# Add this new function after get_json_for_bot in referee.py
+def get_bot_response_with_timeout(bot_proc, json_data, timeout_ms):
+    """
+    Gets a bot's move with a strict time limit and returns detailed results.
+    """
+    result = {"move": None, "raw_output": "", "time_ms": 0, "error": None}
+    
+    def target():
+        try:
+            bot_proc.stdin.write(json_data + "\n")
+            bot_proc.stdin.flush()
+            line = bot_proc.stdout.readline().strip()
+            result["raw_output"] = line
+            if line:
+                result["move"] = json.loads(line)["move"]
+            else:
+                result["error"] = "Bot exited or sent empty response."
+        except (IOError, json.JSONDecodeError) as e:
+            result["error"] = f"Invalid JSON or I/O Error: {e}"
+
+    start_time = time.perf_counter()
+    thread = threading.Thread(target=target)
+    thread.start()
+    thread.join(timeout=timeout_ms / 1000.0)
+    end_time = time.perf_counter()
+    result["time_ms"] = round((end_time - start_time) * 1000, 2)
+
+    if thread.is_alive():
+        result["error"] = f"Timeout: Move took longer than {timeout_ms}ms."
+    
+    return result
+
+
 def main():
     bot1_cmd_str, bot2_cmd_str = sys.argv[1], sys.argv[2]
     bot1_args, bot2_args = shlex.split(bot1_cmd_str), shlex.split(bot2_cmd_str)
     p1_proc = subprocess.Popen(bot1_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
     p2_proc = subprocess.Popen(bot2_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
-
+    
     snakes = [Snake("p1", (BOARD_WIDTH//4, BOARD_HEIGHT//2), (1,0)), Snake("p2", (BOARD_WIDTH*3//4, BOARD_HEIGHT//2), (-1,0))]
     board = Board(BOARD_WIDTH, BOARD_HEIGHT)
     
     game_log = {"frames": [], "result": {}}
     turn = 0
+    move_details_log = []
     
     # --- BUG FIX: Corrected Game Loop Logic ---
     # Log the initial state (Frame 0)
@@ -57,21 +96,21 @@ def main():
     while all(s.is_alive for s in snakes) and turn < MAX_TURNS:
         turn += 1
         current_state_for_bots = get_game_state(turn, board, snakes[0], snakes[1])
+        # this code had no time limit so we are setting that and getting the time for each move the commented out code is the old block
+        # p1_json = get_json_for_bot(current_state_for_bots, "p1", "p2")
+        # p2_json = get_json_for_bot(current_state_for_bots, "p2", "p1")
 
-        p1_json = get_json_for_bot(current_state_for_bots, "p1", "p2")
-        p2_json = get_json_for_bot(current_state_for_bots, "p2", "p1")
+        # p1_proc.stdin.write(p1_json + "\n"); p1_proc.stdin.flush()
+        # p2_proc.stdin.write(p2_json + "\n"); p2_proc.stdin.flush()
 
-        p1_proc.stdin.write(p1_json + "\n"); p1_proc.stdin.flush()
-        p2_proc.stdin.write(p2_json + "\n"); p2_proc.stdin.flush()
-
-        try:
-            p1_move = json.loads(p1_proc.stdout.readline().strip())["move"]
-            p2_move = json.loads(p2_proc.stdout.readline().strip())["move"]
-        except (IOError, json.JSONDecodeError):
-            snakes[0].is_alive = False; snakes[1].is_alive = False
-            # Log the final state after the error
-            game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
-            break
+        # try:
+        #     p1_move = json.loads(p1_proc.stdout.readline().strip())["move"]
+        #     p2_move = json.loads(p2_proc.stdout.readline().strip())["move"]
+        # except (IOError, json.JSONDecodeError):
+        #     snakes[0].is_alive = False; snakes[1].is_alive = False
+        #     # Log the final state after the error
+        #     game_log["frames"].append(get_game_state(turn, board, snakes[0], snakes[1]))
+        #     break
         
         # # 1. Move the snakes
         # snakes[0].move(p1_move)
@@ -90,6 +129,39 @@ def main():
 
         # 1. First, update each snake's intended direction based on its move.
         #    We do this before checking if the move is fatal.
+
+        if turn == 1:
+            timeout_for_this_turn = FIRST_MOVE_TIME_LIMIT_MS
+        else:
+            timeout_for_this_turn = TIME_LIMIT_MS
+
+        p1_json = get_json_for_bot(current_state_for_bots, "p1", "p2")
+        p1_response = get_bot_response_with_timeout(p1_proc, p1_json, timeout_for_this_turn)
+
+        p2_json = get_json_for_bot(current_state_for_bots, "p2", "p1")
+        p2_response = get_bot_response_with_timeout(p2_proc, p2_json, timeout_for_this_turn)
+
+        p1_move, p2_move = p1_response["move"], p2_response["move"]
+
+        # Record the detailed actions for this turn
+        move_details_log.append({
+            "turn": turn,
+            "p1_response": p1_response,
+            "p2_response": p2_response
+        })
+
+        # Disqualify bots that timed out or gave bad output (fairer penalty)
+        if p1_response["error"]:
+            snakes[0].is_alive = False
+        if p2_response["error"]:
+            snakes[1].is_alive = False
+
+        # Also disqualify for invalid move strings
+        if p1_move not in {"UP", "DOWN", "LEFT", "RIGHT"}:
+            snakes[0].is_alive = False
+        if p2_move not in {"UP", "DOWN", "LEFT", "RIGHT"}:
+            snakes[1].is_alive = False
+
         if snakes[0].is_alive:
             # This is an example of strict move validation we can add later
             if p1_move in {"UP", "DOWN", "LEFT", "RIGHT"}:
@@ -127,10 +199,31 @@ def main():
     elif not p1_alive and p2_alive: winner = "Player 2 Wins!"
     elif turn >= MAX_TURNS: winner = "Draw (Max turns reached)"
     
+    # old log files are commented out. the new ones are replaced
     game_log["result"] = {"winner": winner, "p1_length": snakes[0].length, "p2_length": snakes[1].length}
+    game_log["debug_info"] = {"move_details": move_details_log}
     print(json.dumps(game_log))
 
     p1_proc.kill(); p2_proc.kill()
+
+
+    # After winner determination, before printing
+    # p1_stderr = p1_proc.stderr.read()
+    # p2_stderr = p2_proc.stderr.read()
+    
+    # game_log["result"] = {"winner": winner, "p1_length": snakes[0].length, "p2_length": snakes[1].length}
+    
+    # # Add the new, non-breaking debug info section
+    # game_log["debug_info"] = {
+    #     "p1_stderr": p1_stderr,
+    #     "p2_stderr": p2_stderr,
+    #     "move_details": move_details_log
+    # }
+
+    # print(json.dumps(game_log, indent=2)) # Using indent for easier reading in console
+
+    # p1_proc.kill(); p2_proc.kill()
+
 
 if __name__ == "__main__":
     main()

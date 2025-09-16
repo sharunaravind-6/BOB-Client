@@ -86,17 +86,49 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(`/match-status/${matchId}`);
                 const data = await response.json();
 
+                // if (data.status === 'complete') {
+                //     clearInterval(pollingInterval);
+                //     resultDisplay.textContent = data.log.result.winner; // Hide spinner by replacing innerHTML
+                //     gameFrames = data.log.frames;
+                //     runBtn.disabled = false;
+                //     setupAnimation();
+                //     } 
+
                 if (data.status === 'complete') {
                     clearInterval(pollingInterval);
-                    resultDisplay.textContent = data.log.result.winner; // Hide spinner by replacing innerHTML
+
+                    // --- NEW DEBUG LOGGING ---
+                    if (data.log && data.log.debug_info) {
+                        console.groupCollapsed("--- Match Debug Info ---"); // Start a collapsed group
+
+                        const p1_stderr = data.log.debug_info.p1_stderr;
+                        if (p1_stderr && p1_stderr.trim() !== '') {
+                            console.error("Player 1 (Your Bot) Crash Log:\n", p1_stderr);
+                        }
+
+                        const p2_stderr = data.log.debug_info.p2_stderr;
+                        if (p2_stderr && p2_stderr.trim() !== '') {
+                            console.error("Player 2 (Opponent) Crash Log:\n", p2_stderr);
+                        }
+
+                        // Also log the detailed move-by-move data
+                        console.log("Move Details:", data.log.debug_info.move_details);
+                        
+                        console.groupEnd(); // End the group
+                    }
+                    // --- END OF NEW LOGGING ---
+
+                    resultDisplay.textContent = data.log.result.winner;
                     gameFrames = data.log.frames;
                     runBtn.disabled = false;
                     setupAnimation();
-                } else if (data.status === 'error') {
-                    clearInterval(pollingInterval);
-                    resultDisplay.textContent = `Error: ${data.log.error}`;
-                    console.error('Raw error output:', data.log.raw_output);
-                    runBtn.disabled = false;
+                }
+                
+                else if (data.status === 'error') {
+                clearInterval(pollingInterval);
+                resultDisplay.textContent = `Error: ${data.log.error}`;
+                console.error('Raw error output:', data.log.raw_output);
+                runBtn.disabled = false;
                 }
                 // If status is "running", do nothing and wait for the next poll.
             } catch (error) {

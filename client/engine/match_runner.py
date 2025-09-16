@@ -3,6 +3,7 @@ import docker # type: ignore
 import os
 import sys
 import subprocess
+import json
 
 def get_base_image_for_language(language):
     """Maps a language to its corresponding Docker base image."""
@@ -64,7 +65,7 @@ def run_docker_match(user_bot_path, user_language, opponent_image_name):
 
         referee_process = subprocess.run(
             [sys.executable, "-m", "client.engine.referee", bot1_cmd, bot2_cmd],
-            capture_output=True, text=True, timeout=15
+            capture_output=True, text=True
         )
         result = referee_process.stdout.strip()
         if referee_process.stderr:
@@ -84,6 +85,43 @@ def run_docker_match(user_bot_path, user_language, opponent_image_name):
             opponent_container.stop()
             opponent_container.remove()
         print("INFO: Match finished.")
+        # print("INFO: Capturing container logs and cleaning up...")
+        # user_logs = ""
+        # opponent_logs = ""
+        # # Get logs before we stop the containers
+        # if user_container:
+        #     user_logs = user_container.logs().decode('utf-8', errors='ignore')
+        # if opponent_container:
+        #     opponent_logs = opponent_container.logs().decode('utf-8', errors='ignore')
+
+        # # Now stop and remove the containers
+        # if user_container:
+        #     user_container.stop()
+        #     user_container.remove()
+        # if opponent_container:
+        #     opponent_container.stop()
+        #     opponent_container.remove()
+
+        # # Now, add the captured logs to the final result
+        # try:
+        #     # Parse the JSON log we got from the referee
+        #     log_data = json.loads(result)
+        # except (json.JSONDecodeError, TypeError):
+        #     # If referee failed, create a placeholder log
+        #     log_data = {"result": {}, "frames": [], "error": result}
+
+        # # Add the new, non-breaking debug_info section
+        # log_data["debug_info"] = {
+        #     "p1_stderr": user_logs,
+        #     "p2_stderr": opponent_logs
+        # }
+
+        # # Convert the final object back to a JSON string to return
+        # result = json.dumps(log_data)
+
+        # print("INFO: Match finished.")
+
+
 
     return result
 
