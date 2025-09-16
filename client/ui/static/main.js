@@ -358,20 +358,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function togglePlayPause() {
-        // FEATURE: Auto-restart if at the end
-        if (isPaused && currentFrameIndex >= gameFrames.length - 1 && gameFrames.length > 0) {
-            restartAnimation();
-            return;
-        }
-        
-        isPaused = !isPaused;
-        playPauseBtn.innerHTML = isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
+    if (isPaused && currentFrameIndex >= gameFrames.length - 1 && gameFrames.length > 0) {
+        restartAnimation();
+        return;
+    }
+
+    isPaused = !isPaused;
+
+    // Add this line:
+    // When unpausing, re-calculate the speed from the slider's current value.
+    if (!isPaused) {
+        handleSpeedChange(); 
+    }
+
+    playPauseBtn.innerHTML = isPaused ? '<i class="fas fa-play"></i>' : '<i class="fas fa-pause"></i>';
     }
 
     function restartAnimation() {
         currentFrameIndex = 0;
         isPaused = false;
         playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+        handleSpeedChange();
         startAnimationInterval();
         updateFrame();
     }

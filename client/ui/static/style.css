@@ -103,12 +103,7 @@ button {
     border: 1px solid #3b4048;
     background-color: #1e2228;
 }
-#botPathDisplay {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding-right: 10px;
-}
+
 
 .player-card {
     border: 1px solid #3b4048;
@@ -119,4 +114,34 @@ button {
 .player-card h3 {
     margin-top: 0;
     text-align: center;
+}
+
+/* New rule for the container of the file path and browse button */
+.file-selector {
+    display: flex; /* Make it a flex container */
+    align-items: center; /* Vertically align items */
+    gap: 10px; /* Space between the path and the button */
+    background-color: #2b2e34; /* Match input background */
+    border: 1px solid #3b4048; /* Match input border */
+    border-radius: 4px;
+    padding: 8px 10px; /* Padding for the entire component */
+    margin-top: 5px; /* Adjust as needed */
+}
+
+/* Style for the actual path display span */
+.file-selector span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-grow: 1; /* Allow it to take up available space */
+    direction: rtl;
+    text-align: left;
+    color: #e0e0e0; /* Make text readable */
+}
+
+/* Style for the browse button inside the file selector */
+.file-selector .browseBtn {
+    flex-shrink: 0; /* Prevent the button from shrinking */
+    padding: 5px 12px;
+    font-size: 0.85em;
 }
