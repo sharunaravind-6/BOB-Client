@@ -1,6 +1,6 @@
 :root {
     --bg-color: #1e2228;
-    --panel-bg: #282c34;
+    --panel-bg: #000000;
     --border-color: #61afef;
     --text-color: #abb2bf;
     --p1-color: '#61afef'; /* Blue */
@@ -66,7 +66,7 @@ button {
     align-items: center;
     gap: 8px;
 }
-.primary-btn { background-color: #61afef; color: white; }
+.primary-btn { background-color: #61afef; color: rgb(0, 0, 0); }
 .secondary-btn { background-color: #3b4048; color: var(--text-color); }
 .icon-btn { background: none; border: none; color: var(--text-color); font-size: 1.2em; cursor: pointer; padding: 5px; }
 .icon-btn:hover { color: white; }

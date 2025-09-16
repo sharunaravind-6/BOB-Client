@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script compiles and runs a Java file.
 # It uses the filename passed in as the first argument ("$1").
-
+cd /app
 BOT_FILENAME="$1"
 # This line strips the ".java" extension to get the class name
 BOT_CLASSNAME=$(basename "$BOT_FILENAME" .java)

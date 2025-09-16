@@ -5,4 +5,4 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copy our standard python run script into the image
-COPY scripts/python.sh /app/run.sh
+COPY scripts/python.sh /usr/local/bin/run_bot.sh

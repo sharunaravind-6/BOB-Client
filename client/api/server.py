@@ -14,7 +14,14 @@ app = Flask(__name__, template_folder='../ui/templates', static_folder='../ui/st
 # A simple in-memory dictionary to store the results of finished matches
 match_results = {}
 
-def run_match_in_background(match_id, p1_path, p2_path, cpu_bot_name):
+CPU_BOTS = {
+    "cpu_easy": "competition/random-bot",
+    "cpu_medium": "competition/space-filler-bot",
+    # When you add a new CPU bot, you'll just add a line here.
+    # "cpu_medium": "competition/greedy-bot", 
+}
+
+def run_match_in_background(match_id, p1_path, p2_path, opponent_selection):
     """The function that will run in a separate thread."""
 
     # --- Player 1 Setup ---
@@ -28,9 +35,14 @@ def run_match_in_background(match_id, p1_path, p2_path, cpu_bot_name):
         return
 
     # --- Player 2 Setup ---
-    p2_is_cpu = (p2_path == 'cpu')
+    cpu_bot_name = CPU_BOTS.get(opponent_selection) # Look up the image name
     p2_dir, p2_filename, p2_lang = None, None, None
-    if not p2_is_cpu:
+
+    if not cpu_bot_name: # If it's not a CPU bot, it must be a human/local bot
+        if not p2_path or "No file selected" in p2_path:
+            match_results[match_id] = {"status": "error", "log": {"error": "P2: No bot file selected for Player 2."}}
+            return
+
         p2_dir = os.path.dirname(p2_path)
         p2_filename = os.path.basename(p2_path)
         _, p2_ext = os.path.splitext(p2_filename)
@@ -39,6 +51,7 @@ def run_match_in_background(match_id, p1_path, p2_path, cpu_bot_name):
             match_results[match_id] = {"status": "error", "log": {"error": f"P2: Unsupported file type: {p2_ext}"}}
             return
 
+    # Call the match runner with all the prepared info
     result_json_str = run_docker_match(
         p1_dir, p1_filename, p1_lang,
         p2_dir, p2_filename, p2_lang,
@@ -63,17 +76,23 @@ def handle_run_match():
     data = request.get_json()
     p1_path = data.get('p1_path')
     p2_path = data.get('p2_path')
-    cpu_bot_name = data.get('cpu_bot_name')
+    opponent_selection = data.get('opponent_selection')
 
-    if not p1_path or not p2_path:
-        return jsonify({"error": "Missing bot path for P1 or P2"}), 400
+
+    # New, smarter validation
+    if not p1_path or "No file selected" in p1_path:
+        return jsonify({"error": "Missing bot file for Player 1"}), 400
+    
+    if opponent_selection == "human" and (not p2_path or "No file selected" in p2_path):
+        return jsonify({"error": "Missing bot file for Player 2"}), 400
+
 
     match_id = str(uuid.uuid4())
     match_results[match_id] = {"status": "running"}
 
     thread = threading.Thread(
         target=run_match_in_background,
-        args=(match_id, p1_path, p2_path, cpu_bot_name)
+        args=(match_id, p1_path, p2_path, data.get('opponent_selection'))
     )
     thread.daemon = True
     thread.start()

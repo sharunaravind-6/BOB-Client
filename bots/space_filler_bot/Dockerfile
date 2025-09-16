@@ -2,7 +2,7 @@
 FROM competition/base-python
 
 # Copy the bot's source code into the image
-COPY bots/random_bot/bot.py .
+COPY bots/space_filler_bot/bot.py .
 
 # Set the default command to run the bot
 # CMD ["./run.sh", "bot.py"]

@@ -110,16 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
         //     bot_path: botPathDisplay.textContent, // Read from the display span now
         //     team_name: teamNameDisplay.textContent
         //     };
-        const p1_bot_path = botPathDisplayP1.textContent;
-        const opponent_selection = opponentType.value;
-        const p2_bot_path = (opponent_selection === 'human') ? botPathDisplayP2.textContent : 'cpu';
+        const opponent_selection = opponentType.value; // This will be "cpu_easy" or "human"
+        const p1_path = botPathDisplayP1.textContent;
+        const p2_path = (opponent_selection === 'human') ? botPathDisplayP2.textContent : null;
 
         const payload = {
             team_name: teamNameDisplay.textContent,
-            p1_path: p1_bot_path,
-            p2_path: p2_bot_path,
-            // We'll also tell the backend which CPU bot to use if selected
-            cpu_bot_name: (opponent_selection === 'cpu') ? 'competition/random-bot' : null
+            p1_path: p1_path,
+            p2_path: p2_path,
+            opponent_selection: opponent_selection // We send the key, e.g., "cpu_easy"
         };
 
         try {
@@ -261,10 +260,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function drawFrame(frame, cellW, cellH) {
         // BUG FIX: Use direct color values, not CSS variables.
-        const bgColor = '#676e78ff';
-        const gridColor = 'rgba(117, 68, 68, 0.05)';
-        const p1Color = '#000000ff';
-        const p2Color = '#ffffffff';
+        const bgColor = '#000000ff';
+        const gridColor = 'rgba(128, 113, 113, 0.83)';
+        const p1Color = '#00fff2ff';
+        const p2Color = '#fffb00ff';
         
         // Clear and draw grid
         ctx.fillStyle = bgColor;
@@ -284,12 +283,29 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.stroke();
         }
 
+        const padding = ctx.lineWidth; // Use the grid line width as padding
+
         // Draw Player 1
         ctx.fillStyle = p1Color;
-        frame.p1.body.forEach(part => ctx.fillRect(part.x * cellW, part.y * cellH, cellW, cellH));
+        frame.p1.body.forEach(part => {
+            ctx.fillRect(
+                part.x * cellW + padding,  // Start slightly to the right
+                part.y * cellH + padding,  // Start slightly lower
+                cellW - padding * 2,       // Make it narrower
+                cellH - padding * 2        // Make it shorter
+            );
+        });
+        
         // Draw Player 2
         ctx.fillStyle = p2Color;
-        frame.p2.body.forEach(part => ctx.fillRect(part.x * cellW, part.y * cellH, cellW, cellH));
+        frame.p2.body.forEach(part => {
+            ctx.fillRect(
+                part.x * cellW + padding,
+                part.y * cellH + padding,
+                cellW - padding * 2,
+                cellH - padding * 2
+            );
+        });
         
         // Draw Heads and Death markers
         drawHead(frame.p1, cellW, cellH);
@@ -300,8 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const headX = player.head.x * cellW;
         const headY = player.head.y * cellH;
         
-        const p1HeadColor = '#6aff00ff';
-        const p2HeadColor = '#00ff2fff';
+        const p1HeadColor = '#9500ffff';
+        const p2HeadColor = '#ff5100ff';
         const deadColor = '#000000ff';
 
         const headColor = player.id === 'p1' ? p1HeadColor : p2HeadColor;

@@ -47,7 +47,8 @@ def run_docker_match(p1_dir, p1_filename, p1_lang, p2_dir, p2_filename, p2_lang,
             working_dir='/app',
             tty=True # Keeps container alive
         )
-        bot1_cmd = f"docker exec -i {user_container.id} ./run.sh {p1_filename}"
+        # bot1_cmd = f"docker exec -i {user_container.id} ./run.sh {p1_filename}"
+        bot1_cmd = f"docker exec -i {user_container.id} run_bot.sh {p1_filename}"
 
         # --- 2. Player 2 Setup (can be CPU or another user bot) ---
         if cpu_bot_name:
@@ -60,7 +61,8 @@ def run_docker_match(p1_dir, p1_filename, p1_lang, p2_dir, p2_filename, p2_lang,
                 tty=True
             )
             # The CPU bot's filename is always bot.py inside its image
-            bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh bot.py"
+            # bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh bot.py"
+            bot2_cmd = f"docker exec -i {opponent_container.id} run_bot.sh bot.py"
         else:
             # --- Scenario: Player vs. Player ---
             p2_base_image = get_base_image_for_language(p2_lang)
@@ -76,7 +78,8 @@ def run_docker_match(p1_dir, p1_filename, p1_lang, p2_dir, p2_filename, p2_lang,
                 working_dir='/app',
                 tty=True
             )
-            bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh {p2_filename}"
+            # bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh {p2_filename}"
+            bot2_cmd = f"docker exec -i {opponent_container.id} run_bot.sh {p2_filename}"
 
         # --- 3. Run the Referee on the Host ---
         print("INFO: Starting referee...")
