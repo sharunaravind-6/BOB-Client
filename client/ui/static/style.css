@@ -94,3 +94,18 @@ button {
 .info-label { text-align: right; font-weight: bold; }
 #turnDisplay { grid-column: 2 / 4; }
 
+.file-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #3b4048;
+    background-color: #1e2228;
+}
+#botPathDisplay {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 10px;
+}

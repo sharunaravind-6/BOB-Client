@@ -8,13 +8,14 @@ import json
 def get_base_image_for_language(language):
     """Maps a language to its corresponding Docker base image."""
     lang_map = {
-        "python": "python:3.11-slim",  # We can use the official python image directly
-        "java": "competition/base-java"
+        # "python": "python:3.11-slim",  # We can use the official python image directly
+        "python" : "competition/base-python",
+        "java" : "competition/base-java"
         # Add more languages here later, e.g., "javascript": "node:18-slim"
     }
     return lang_map.get(language.lower())
 
-def run_docker_match(user_bot_path, user_language, opponent_image_name):
+def run_docker_match(user_bot_directory,user_bot_filename, user_language, opponent_image_name):
     """
     Runs a Tron match inside Docker containers by mounting user code.
     """
@@ -44,7 +45,7 @@ def run_docker_match(user_bot_path, user_language, opponent_image_name):
             image=user_base_image,
             detach=True,
             network=network_name,
-            volumes={os.path.abspath(user_bot_path): {'bind': '/app', 'mode': 'rw'}},
+            volumes={os.path.abspath(user_bot_directory): {'bind': '/app', 'mode': 'rw'}},
             working_dir='/app',
             tty=True # Keeps container alive
         )
@@ -60,8 +61,10 @@ def run_docker_match(user_bot_path, user_language, opponent_image_name):
 
         # --- 3. Run the Referee on the Host ---
         print("INFO: Starting referee...")
-        bot1_cmd = f"docker exec -i {user_container.id} ./run.sh"
-        bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh"
+        # bot1_cmd = f"docker exec -i {user_container.id} ./run.sh"
+        bot1_cmd = f"docker exec -i {user_container.id} ./run.sh {user_bot_filename}"
+        # bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh"
+        bot2_cmd = f"docker exec -i {opponent_container.id} ./run.sh bot.py"
 
         referee_process = subprocess.run(
             [sys.executable, "-m", "client.engine.referee", bot1_cmd, bot2_cmd],
@@ -85,41 +88,6 @@ def run_docker_match(user_bot_path, user_language, opponent_image_name):
             opponent_container.stop()
             opponent_container.remove()
         print("INFO: Match finished.")
-        # print("INFO: Capturing container logs and cleaning up...")
-        # user_logs = ""
-        # opponent_logs = ""
-        # # Get logs before we stop the containers
-        # if user_container:
-        #     user_logs = user_container.logs().decode('utf-8', errors='ignore')
-        # if opponent_container:
-        #     opponent_logs = opponent_container.logs().decode('utf-8', errors='ignore')
-
-        # # Now stop and remove the containers
-        # if user_container:
-        #     user_container.stop()
-        #     user_container.remove()
-        # if opponent_container:
-        #     opponent_container.stop()
-        #     opponent_container.remove()
-
-        # # Now, add the captured logs to the final result
-        # try:
-        #     # Parse the JSON log we got from the referee
-        #     log_data = json.loads(result)
-        # except (json.JSONDecodeError, TypeError):
-        #     # If referee failed, create a placeholder log
-        #     log_data = {"result": {}, "frames": [], "error": result}
-
-        # # Add the new, non-breaking debug_info section
-        # log_data["debug_info"] = {
-        #     "p1_stderr": user_logs,
-        #     "p2_stderr": opponent_logs
-        # }
-
-        # # Convert the final object back to a JSON string to return
-        # result = json.dumps(log_data)
-
-        # print("INFO: Match finished.")
 
 
 

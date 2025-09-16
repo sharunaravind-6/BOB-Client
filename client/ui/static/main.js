@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const editNameBtn = document.getElementById('editNameBtn');
     const teamNameDisplay = document.getElementById('teamNameDisplay');
     const teamNameInput = document.getElementById('teamNameInput');
+    const botPathDisplay = document.getElementById('botPathDisplay');
+    const browseBtn = document.getElementById('browseBtn');
     
     // Visualizer
     const canvas = document.getElementById('tronCanvas');
@@ -44,8 +46,28 @@ document.addEventListener('DOMContentLoaded', () => {
     stepFwdBtn.addEventListener('click', () => step(1));
     speedSlider.addEventListener('input', handleSpeedChange);
     scrubber.addEventListener('input', handleScrubberChange);
+    browseBtn.addEventListener('click', selectBotFile);
 
     // --- CORE LOGIC ---
+
+    async function selectBotFile() 
+    {
+        // This 'pywebview.api.select_folder' calls the Python function we exposed.
+        const path = await window.pywebview.api.select_file();
+        if (path) {
+            botPathDisplay.textContent = path;
+        }
+    }
+
+    async function selectBotFolder() 
+    {
+        // This 'pywebview.api.select_folder' calls the Python function we exposed.
+        const path = await window.pywebview.api.select_folder();
+        if (path) {
+            botPathDisplay.textContent = path;
+        }
+    }
+
     async function startMatch() {
         clearInterval(animationInterval);
         clearInterval(pollingInterval);
@@ -55,9 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const payload = {
             language: document.getElementById('language').value,
-            bot_path: document.getElementById('botPath').value,
+            bot_path: botPathDisplay.textContent, // Read from the display span now
             team_name: teamNameDisplay.textContent
-        };
+    };
 
         try {
             const response = await fetch('/run-match', {

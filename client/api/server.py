@@ -16,7 +16,11 @@ match_results = {}
 
 def run_match_in_background(match_id, bot_path, language, opponent_image):
     """The function that will run in a separate thread."""
-    result_json_str = run_docker_match(bot_path, language, opponent_image)
+
+    bot_directory = os.path.dirname(bot_path)
+    bot_filename = os.path.basename(bot_path)
+    result_json_str = run_docker_match(bot_directory, bot_filename, language, opponent_image)
+    # result_json_str = run_docker_match(bot_path, language, opponent_image) #old one where we had our own script.
     try:
         game_log = json.loads(result_json_str)
         match_results[match_id] = {"status": "complete", "log": game_log}
@@ -60,5 +64,5 @@ def get_match_status(match_id):
     result = match_results.get(match_id, {"status": "not_found"})
     return jsonify(result)
 
-if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+# if __name__ == '__main__':
+#     app.run(debug=True, port=5000)

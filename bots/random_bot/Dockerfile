@@ -1,14 +1,8 @@
-# Use a slim, official Python image as a base
-FROM python:3.11-slim
+# Use our own standard Python base image
+FROM competition/base-python
 
-# Set the working directory inside the container
-WORKDIR /app
+# Copy the bot's source code into the image
+COPY bots/random_bot/bot.py .
 
-# Copy the bot's code into the container
-COPY . .
-
-# Make the run script executable
-RUN chmod +x run.sh
-
-# The command that will be executed when the container starts
-CMD ["./run.sh"]
+# Set the default command to run the bot
+CMD ["./run.sh", "bot.py"]

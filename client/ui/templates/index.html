@@ -33,8 +33,13 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <!-- <label for="botPath">Bot Path</label>
+                    <input type="text" id="botPath" value="bots/my_test_bot"> -->
                     <label for="botPath">Bot Path</label>
-                    <input type="text" id="botPath" value="bots/my_test_bot">
+                    <div class="file-selector">
+                        <span id="botPathDisplay">No Folder selected...</span>
+                    <button id="browseBtn">Browse...</button>
+                </div>
                 </div>
                 <div class="action-buttons">
                     <button id="runMatchBtn" class="primary-btn">
