@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function drawFrame(frame, cellW, cellH) {
         // BUG FIX: Use direct color values, not CSS variables.
         const bgColor = '#000000ff';
-        const gridColor = 'rgba(128, 113, 113, 0.83)';
+        const gridColor = 'rgba(118, 37, 218, 1)';
         const p1Color = '#00fff2ff';
         const p2Color = '#fffb00ff';
         
