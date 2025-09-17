@@ -8,6 +8,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let pollingInterval;
 
     // --- ELEMENT REFERENCES ---
+
+    //submission stuff
+    const submitBtn = document.getElementById('submitBtn');
+    const submitModal = document.getElementById('submitModal');
+    const modalTeamName = document.getElementById('modalTeamName');
+    const passwordInput = document.getElementById('passwordInput');
+    const cancelSubmitBtn = document.getElementById('cancelSubmitBtn');
+    const confirmSubmitBtn = document.getElementById('confirmSubmitBtn');
+    const submitStatus = document.getElementById('submitStatus');
+
     // Setup Panel
     const runBtn = document.getElementById('runMatchBtn');
     const editNameBtn = document.getElementById('editNameBtn');
@@ -61,6 +71,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // browseBtn.addEventListener('click', selectBotFile);
     opponentType.addEventListener('change', handleOpponentTypeChange);
     browseBtns.forEach(btn => btn.addEventListener('click', selectBotFile));
+    submitBtn.addEventListener('click', handleSubmit);
+    cancelSubmitBtn.addEventListener('click', () => submitModal.classList.add('hidden'));
+    confirmSubmitBtn.addEventListener('click', uploadBot);
 
     // --- CORE LOGIC ---
 
@@ -438,6 +451,59 @@ document.addEventListener('DOMContentLoaded', () => {
             teamNameInput.focus();
         }
     }
+
+    function handleSubmit() {
+        // Show the modal and populate the team name
+        const teamName = teamNameDisplay.textContent;
+        const p1_path = botPathDisplayP1.textContent;
+        if (!teamName || !p1_path || p1_path.includes("No file selected")) {
+            alert("Please enter a team name and select a Player 1 bot file before submitting.");
+            return;
+        }
+        modalTeamName.textContent = teamName;
+        passwordInput.value = "";
+        submitStatus.textContent = "";
+        submitModal.classList.remove('hidden');
+    }
+
+    async function uploadBot() 
+    {
+        submitStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Zipping and uploading...';
+
+        const p1_path = botPathDisplayP1.textContent;
+
+        // 1. Ask Python to create the zip file
+        const zipResult = await window.pywebview.api.create_bot_zip(p1_path);
+
+        if (zipResult.error) {
+            submitStatus.textContent = `Error: ${zipResult.error}`;
+            return;
+        }
+
+        // 2. Prepare payload for our own backend
+        const payload = {
+            team_name: teamNameDisplay.textContent,
+            password: passwordInput.value,
+            zip_data: zipResult.zip_data // The base64-encoded zip file
+        };
+
+        // 3. Send to our backend, which will forward it to the main server
+        try {
+            const response = await fetch('/submit-to-server', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || 'Submission failed.');
+            }
+            submitStatus.textContent = data.message;
+            setTimeout(() => submitModal.classList.add('hidden'), 2000); // Close modal on success
+        } catch (error) {
+            submitStatus.textContent = `Error: ${error.message}`;
+        }
+    }   
     
     teamNameInput.addEventListener('blur', toggleNameEdit);
     teamNameInput.addEventListener('keydown', (e) => {

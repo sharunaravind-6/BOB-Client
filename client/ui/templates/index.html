@@ -68,8 +68,8 @@
                 <h2 id="resultDisplay">Run a Match!</h2>
                 <div class="info-grid">
                     <div class="info-header"></div>
-                    <div class="info-header">Player 1 (Blue)</div>
-                    <div class="info-header">Player 2 (Red)</div>
+                    <div class="info-header">Player 1 (Cyan)</div>
+                    <div class="info-header">Player 2 (Yellow)</div>
                     
                     <div class="info-label">Status</div>
                     <div id="p1Status">-</div>
@@ -85,6 +85,22 @@
             </div>
         </div>
 
+        <div id="submitModal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <h2>Submit Bot to Server</h2>
+                <p>Enter the password for team: <strong id="modalTeamName"></strong></p>
+                <div class="form-group">
+                    <label for="passwordInput">Password</label>
+                    <input type="password" id="passwordInput" placeholder="Enter password...">
+                </div>
+                <div class="action-buttons">
+                    <button id="cancelSubmitBtn" class="secondary-btn">Cancel</button>
+                    <button id="confirmSubmitBtn" class="primary-btn">Confirm & Upload</button>
+                </div>
+                <div id="submitStatus" class="submit-status"></div>
+            </div>
+        </div>
+        
         <div class="panel visualizer-panel">
             <canvas id="tronCanvas" width="800" height="533"></canvas>
             <div class="replay-controls">

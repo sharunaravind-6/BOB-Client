@@ -99,11 +99,11 @@ def run_docker_match(p1_dir, p1_filename, p1_lang, p2_dir, p2_filename, p2_lang,
         # --- 4. Cleanup ---
         print("INFO: Cleaning up containers...")
         if user_container:
-            user_container.stop()
-            user_container.remove()
+            user_container.kill()  #changed stop to kill for speed
+            user_container.remove(force=True)
         if opponent_container:
-            opponent_container.stop()
-            opponent_container.remove()
+            opponent_container.kill() #changed stop to kill for speed
+            opponent_container.remove(force=True)
         print("INFO: Match finished.")
         
     return result

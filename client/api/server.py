@@ -1,9 +1,12 @@
 # client/api/server.py
+import base64
 import os
 import sys
 import json
 import uuid
 import threading
+import requests
+import config
 from flask import Flask, request, jsonify, render_template # type: ignore
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -104,5 +107,41 @@ def get_match_status(match_id):
     result = match_results.get(match_id, {"status": "not_found"})
     return jsonify(result)
 
+@app.route('/submit-to-server', methods=['POST'])
+def forward_submission():
+    """Receives data from our UI and forwards it to the main competition server."""
+    data = request.get_json()
+
+    team_name = data.get('team_name')
+    password = data.get('password')
+    zip_data_b64 = data.get('zip_data')
+
+    if not all([team_name, password, zip_data_b64]):
+        return jsonify({"error": "Missing data for submission."}), 400
+
+    # The URL of your friend's server
+    # COMPETITION_SERVER_URL = "http://FRIENDS_IP_ADDRESS:5000/submit"
+
+    COMPETITION_SERVER_URL = config.COMPETITION_SERVER_URL
+
+
+    # Decode the base64 string back into bytes
+    zip_bytes = base64.b64decode(zip_data_b64)
+
+    # Prepare the multipart/form-data payload
+    form_payload = {
+        'team_name': (None, team_name),
+        'password': (None, password),
+    }
+    files_payload = {
+        'bot_zip_file': ('bot.zip', zip_bytes, 'application/zip')
+    }
+
+    try:
+        response = requests.post(COMPETITION_SERVER_URL, data=form_payload, files=files_payload, timeout=30)
+        response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)
+        return jsonify(response.json()), response.status_code
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": f"Failed to connect to competition server: {e}"}), 500
 # if __name__ == '__main__':
 #     app.run(debug=True, port=5000)
