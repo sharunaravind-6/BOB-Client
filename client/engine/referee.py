@@ -7,6 +7,7 @@ from .game import Snake, Board
 import config
 import threading
 import time
+import random
 
 
 # --- Configurable Game Constants ---
@@ -75,6 +76,26 @@ def get_bot_response_with_timeout(bot_proc, json_data, timeout_ms):
     
     return result
 
+def generate_start_positions(width, height):
+    """
+    Generates symmetrically random start positions and directions for two snakes.
+    """
+    padding = 3 # How far from the edge the snakes can spawn
+    
+    # P1 spawns on the left half of the board
+    p1_x = random.randint(padding, (width // 2) - padding)
+    p1_y = random.randint(padding, height - 1 - padding)
+    
+    # P2 spawns in a symmetrically opposite position on the right half
+    p2_x = width - 1 - p1_x
+    p2_y = p1_y
+
+    # Snakes always start facing each other
+    p1_dir = (1, 0) # Right
+    p2_dir = (-1, 0) # Left
+
+    return (p1_x, p1_y), p1_dir, (p2_x, p2_y), p2_dir
+
 
 def main():
     bot1_cmd_str, bot2_cmd_str = sys.argv[1], sys.argv[2]
@@ -82,7 +103,10 @@ def main():
     p1_proc = subprocess.Popen(bot1_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
     p2_proc = subprocess.Popen(bot2_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, bufsize=1)
     
-    snakes = [Snake("p1", (BOARD_WIDTH//4, BOARD_HEIGHT//2), (1,0)), Snake("p2", (BOARD_WIDTH*3//4, BOARD_HEIGHT//2), (-1,0))]
+    # snakes = [Snake("p1", (BOARD_WIDTH//4, BOARD_HEIGHT//2), (1,0)), Snake("p2", (BOARD_WIDTH*3//4, BOARD_HEIGHT//2), (-1,0))]
+    
+    p1_pos, p1_dir, p2_pos, p2_dir = generate_start_positions(BOARD_WIDTH, BOARD_HEIGHT)
+    snakes = [Snake("p1", p1_pos, p1_dir), Snake("p2", p2_pos, p2_dir)]
     board = Board(BOARD_WIDTH, BOARD_HEIGHT)
     
     game_log = {"frames": [], "result": {}}

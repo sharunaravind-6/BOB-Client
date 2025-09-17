@@ -15,11 +15,12 @@ class Snake:
         return self.body[0]
 
     def move(self, move_str):
-        # Prevent moving directly backward
-        if move_str == "UP" and self.direction == (0, 1): return
-        if move_str == "DOWN" and self.direction == (0, -1): return
-        if move_str == "LEFT" and self.direction == (1, 0): return
-        if move_str == "RIGHT" and self.direction == (-1, 0): return
+        # Prevent moving directly backward if bigger than 1
+        if self.length > 1:
+            if move_str == "UP" and self.direction == (0, 1): return
+            if move_str == "DOWN" and self.direction == (0, -1): return
+            if move_str == "LEFT" and self.direction == (1, 0): return
+            if move_str == "RIGHT" and self.direction == (-1, 0): return
 
         move_map = {"UP": (0, -1), "DOWN": (0, 1), "LEFT": (-1, 0), "RIGHT": (1, 0)}
         if move_str in move_map:
