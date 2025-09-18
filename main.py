@@ -42,7 +42,7 @@ class Api:
 
         # 1. Determine the language and find the correct script template
         _, extension = os.path.splitext(bot_filename)
-        script_map = {".py": "scripts/python.sh", ".java": "scripts/java.sh"}
+        script_map = {".py": "scripts/python.sh", ".java": "scripts/java.sh", ".c": "scripts/c.sh",".js": "scripts/javascript.sh",".cpp": "scripts/cpp.sh"}
         script_path = script_map.get(extension)
 
         if not script_path:

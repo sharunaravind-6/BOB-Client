@@ -10,7 +10,11 @@ def get_base_image_for_language(language):
     lang_map = {
         # "python": "python:3.11-slim",  # We can use the official python image directly
         "python" : "competition/base-python",
-        "java" : "competition/base-java"
+        "java" : "competition/base-java",
+        "c": "competition/base-c",
+        "javascript": "competition/base-javascript",
+        "cpp": "competition/base-cpp",
+
         # Add more languages here later, e.g., "javascript": "node:18-slim"
     }
     return lang_map.get(language.lower())
