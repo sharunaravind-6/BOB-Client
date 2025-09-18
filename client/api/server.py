@@ -7,6 +7,7 @@ import uuid
 import threading
 import requests
 import config
+from engine.match_runner import run_native_match
 from flask import Flask, request, jsonify, render_template # type: ignore
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -55,7 +56,9 @@ def run_match_in_background(match_id, p1_path, p2_path, opponent_selection):
             return
 
     # Call the match runner with all the prepared info
-    result_json_str = run_docker_match(
+    #this has been changed from run_docker_match to run local match
+
+    result_json_str = run_native_match(
         p1_dir, p1_filename, p1_lang,
         p2_dir, p2_filename, p2_lang,
         cpu_bot_name
