@@ -99,4 +99,4 @@ if __name__ == '__main__':
         height=800
     )
     # This debug=True flag enables the right-click "Inspect" menu
-    webview.start(debug=True)
+    webview.start(debug=False)

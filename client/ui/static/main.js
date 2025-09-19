@@ -23,7 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const editNameBtn = document.getElementById('editNameBtn');
     const teamNameDisplay = document.getElementById('teamNameDisplay');
     const teamNameInput = document.getElementById('teamNameInput');
-
+    const tabs = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+    const logOutput = document.getElementById('logOutput');
 
     // const botPathDisplay = document.getElementById('botPathDisplay');
     // const browseBtn = document.getElementById('browseBtn');
@@ -111,6 +113,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+
+            const targetPanelId = tab.dataset.tab;
+            tabPanels.forEach(panel => {
+                if (panel.id === targetPanelId) {
+                    panel.classList.remove('hidden');
+                } else {
+                    panel.classList.add('hidden');
+                }
+            });
+        });
+    });
+
     async function startMatch() {
         clearInterval(animationInterval);
         clearInterval(pollingInterval);
@@ -156,83 +174,104 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function pollForResult(matchId) {
-        pollingInterval = setInterval(async () => {
-            try {
-                const response = await fetch(`/match-status/${matchId}`);
-                const data = await response.json();
+    pollingInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`/match-status/${matchId}`);
+            const data = await response.json();
 
-                // if (data.status === 'complete') {
-                //     clearInterval(pollingInterval);
-                //     resultDisplay.textContent = data.log.result.winner; // Hide spinner by replacing innerHTML
-                //     gameFrames = data.log.frames;
-                //     runBtn.disabled = false;
-                //     setupAnimation();
-                //     } 
+            if (data.status === 'complete') {
+                clearInterval(pollingInterval);
+                const log = data.log;
 
-                if (data.status === 'complete') {
-                    clearInterval(pollingInterval);
-                    
-                    const log = data.log;
-                    let errorFound = false;
-                    if (log.debug_info && log.debug_info.move_details) {
-                        for (const turn of log.debug_info.move_details) {
-                            if (turn.p1_response.error) {
-                                resultDisplay.textContent = `P1 Error on Turn ${turn.turn}: ${turn.p1_response.error}`;
-                                errorFound = true;
-                                break; // Stop after finding the first error
-                            }
-                            if (turn.p2_response.error) {
-                                resultDisplay.textContent = `P2 Error on Turn ${turn.turn}: ${turn.p2_response.error}`;
-                                errorFound = true;
-                                break;
-                            }
-                        }
-                    }
+                // Display the final winner in the info panel
+                resultDisplay.textContent = log.result.winner;
 
+                // Build the new interactive log
+                buildInteractiveLog(log);
 
-                    // --- NEW DEBUG LOGGING ---
-                    if (data.log && data.log.debug_info) {
-                        console.groupCollapsed("--- Match Debug Info ---"); // Start a collapsed group
+                gameFrames = log.frames;
+                runBtn.disabled = false;
+                setupAnimation();
 
-                        const p1_stderr = data.log.debug_info.p1_stderr;
-                        if (p1_stderr && p1_stderr.trim() !== '') {
-                            console.error("Player 1 (Your Bot) Crash Log:\n", p1_stderr);
-                        }
-
-                        const p2_stderr = data.log.debug_info.p2_stderr;
-                        if (p2_stderr && p2_stderr.trim() !== '') {
-                            console.error("Player 2 (Opponent) Crash Log:\n", p2_stderr);
-                        }
-
-                        // Also log the detailed move-by-move data
-                        console.log("Move Details:", data.log.debug_info.move_details);
-                        
-                        console.groupEnd(); // End the group
-                    }
-                    // --- END OF NEW LOGGING ---
-
-                    if(!errorFound){
-                        resultDisplay.textContent = data.log.result.winner;
-                    }
-                    gameFrames = data.log.frames;
-                    runBtn.disabled = false;
-                    setupAnimation();
-                }
-                
-                else if (data.status === 'error') {
+            } else if (data.status === 'error') {
                 clearInterval(pollingInterval);
                 resultDisplay.textContent = `Error: ${data.log.error}`;
-                console.error('Raw error output:', data.log.raw_output);
-                runBtn.disabled = false;
-                }
-                // If status is "running", do nothing and wait for the next poll.
-            } catch (error) {
-                clearInterval(pollingInterval);
-                resultDisplay.textContent = `Polling Error: ${error.message}`;
+                logContainer.textContent = `Server Error: ${data.log.error}\n\nRaw Output:\n${data.log.raw_output}`;
                 runBtn.disabled = false;
             }
-        }, 2000); // Poll every 2 seconds
+        } catch (error) {
+            clearInterval(pollingInterval);
+            resultDisplay.textContent = `Polling Error: ${error.message}`;
+            runBtn.disabled = false;
+        }
+        }, 2000);
     }
+
+    function buildInteractiveLog(log) {
+    const logContainer = document.getElementById('logContainer');
+    logContainer.innerHTML = ''; // Clear previous log
+
+    if (!log.debug_info) {
+        logContainer.textContent = 'No debug info available.';
+        return;
+    }
+
+    // --- Helper function to create a collapsible section ---
+    function createCollapsibleSection(summaryText, contentObject, isOpen = false) {
+        const details = document.createElement('details');
+        details.open = isOpen;
+        const summary = document.createElement('summary');
+        summary.textContent = summaryText;
+
+        const content = document.createElement('div');
+        content.className = 'log-content';
+        const pre = document.createElement('pre');
+        pre.textContent = JSON.stringify(contentObject, null, 2);
+
+        content.appendChild(pre);
+        details.appendChild(summary);
+        details.appendChild(content);
+        return details;
+    }
+
+    const debugInfo = log.debug_info;
+
+    // Create a collapsible section for crash logs
+    if (debugInfo.p1_stderr || debugInfo.p2_stderr) {
+        const crashDetails = createCollapsibleSection("Crash Logs", {
+            p1_stderr: debugInfo.p1_stderr,
+            p2_stderr: debugInfo.p2_stderr,
+        }, true); // Open by default if errors exist
+        logContainer.appendChild(crashDetails);
+    }
+
+    // Create a collapsible section for move details
+    if (debugInfo.move_details) {
+        const movesDetails = document.createElement('details');
+        movesDetails.open = true; // Main "Move Details" is open by default
+        movesDetails.innerHTML = `<summary>Move Details</summary>`;
+        const movesContent = document.createElement('div');
+        movesContent.className = 'log-content';
+
+        for (const turn of debugInfo.move_details) {
+            // Each turn is its own collapsible section
+            const turnDetails = document.createElement('details');
+            turnDetails.innerHTML = `<summary>Turn ${turn.turn}</summary>`;
+            const turnContent = document.createElement('div');
+            turnContent.className = 'log-content';
+
+            // Add nested collapsible sections for board state and responses
+            turnContent.appendChild(createCollapsibleSection('Board State', turn.board_state));
+            turnContent.appendChild(createCollapsibleSection('P1 Response', turn.responses.p1));
+            turnContent.appendChild(createCollapsibleSection('P2 Response', turn.responses.p2));
+
+            turnDetails.appendChild(turnContent);
+            movesContent.appendChild(turnDetails);
+        }
+        movesDetails.appendChild(movesContent);
+        logContainer.appendChild(movesDetails);
+    }
+}
     
     // --- ANIMATION & DRAWING ---
     function setupAnimation() {

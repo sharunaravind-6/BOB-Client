@@ -15,75 +15,81 @@
 
     <main class="main-container">
         <div class="left-column">
-            <div class="panel setup-panel">
-                <h2>Setup</h2>
-            <div class="player-card">
-                <h3>Player 1 (You)</h3>
-                <div class="form-group">
-                    <label>Bot File</label>
-                    <div class="file-selector">
-                        <span id="botPathDisplayP1">No file selected...</span>
-                        <button class="browseBtn" data-player="P1">Browse...</button>
+        <div>
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="setup">Setup</button>
+                <button class="tab-btn" data-tab="logs">Logs</button>
+            </div>
+
+            <div id="setup" class="tab-panel">
+                <div class="panel setup-panel">
+                    <div class="player-card">
+                        <h3>Player 1 (You)</h3>
+                        <div class="form-group">
+                            <label>Bot File</label>
+                            <div class="file-selector">
+                                <span id="botPathDisplayP1">No file selected...</span>
+                                <button class="browseBtn" data-player="P1">Browse...</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="player-card">
+                        <h3>Player 2 (Opponent)</h3>
+                        <div class="form-group">
+                            <label>Opponent Type</label>
+                            <select id="opponentType">
+                                <option value="cpu_easy">CPU: Random (Easy)</option>
+                                <option value="cpu_medium">CPU: Space Filler (Medium)</option>
+                                <option value="human">Select Local Bot</option>
+                            </select>
+                        </div>
+                        <div id="p2FileSelector" class="form-group hidden">
+                            <label>Bot File</label>
+                            <div class="file-selector">
+                                <span id="botPathDisplayP2">No file selected...</span>
+                                <button class="browseBtn" data-player="P2">Browse...</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="teamName">Team Name</label>
+                        <div class="editable-field">
+                            <span id="teamNameDisplay">MyAwesomeTeam</span>
+                            <button id="editNameBtn" class="icon-btn"><i class="fas fa-pencil-alt"></i></button>
+                            <input type="text" id="teamNameInput" class="hidden" value="MyAwesomeTeam">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button id="runMatchBtn" class="primary-btn"><i class="fas fa-play"></i> Test Match</button>
+                        <button id="submitBtn" class="secondary-btn"><i class="fas fa-upload"></i> Submit</button>
                     </div>
                 </div>
             </div>
 
-            <div class="player-card">
-                <h3>Player 2 (Opponent)</h3>
-                <div class="form-group">
-                    <label>Opponent Type</label>
-                    <select id="opponentType">
-                        <option value="cpu_easy">CPU (Easy)</option>
-                        <option value="cpu_medium">CPU (Medium)</option>
-                        <option value="human">Select Local Bot</option>
-                    </select>
-                </div>
-                <div class="form-group" id="p2FileSelector" class="hidden">
-                    <label>Bot File</label>
-                    <div class="file-selector">
-                        <span id="botPathDisplayP2">No file selected...</span>
-                        <button class="browseBtn" data-player="P2">Browse...</button>
-                    </div>
-                </div>
+            <div id="logs" class="tab-panel hidden">
+                <div class="panel log-panel">
+                    <h2>Last Match Log</h2>
+                <div id="logContainer">Run a match to see the debug log.</div>
             </div>
-
-            <div class="form-group">
-                <label for="teamName">Team Name</label>
-                <div class="editable-field">
-                    <span id="teamNameDisplay">MyAwesomeTeam</span>
-                    <button id="editNameBtn" class="icon-btn"><i class="fas fa-pencil-alt"></i></button>
-                    <input type="text" id="teamNameInput" class="hidden" value="MyAwesomeTeam">
-                </div>
-            </div>
-
-            <div class="action-buttons">
-                <button id="runMatchBtn" class="primary-btn">
-                    <i class="fas fa-play"></i> Test Match
-                </button>
-                <button id="submitBtn" class="secondary-btn"><i class="fas fa-upload"></i> Submit</button>
-            </div>
-            </div>
-
-            <div class="panel info-panel">
-                <h2 id="resultDisplay">Run a Match!</h2>
-                <div class="info-grid">
-                    <div class="info-header"></div>
-                    <div class="info-header">Player 1 (Cyan)</div>
-                    <div class="info-header">Player 2 (Yellow)</div>
-                    
-                    <div class="info-label">Status</div>
-                    <div id="p1Status">-</div>
-                    <div id="p2Status">-</div>
-
-                    <div class="info-label">Length</div>
-                    <div id="p1Length">-</div>
-                    <div id="p2Length">-</div>
-
-                    <div class="info-label">Turn</div>
-                    <div id="turnDisplay" colspan="2">- / -</div>
-                </div>
+</div>
+        </div>
+        <div class="panel info-panel">
+            <h2 id="resultDisplay">Run a Match!</h2>
+            <div class="info-grid">
+                <div class="info-header"></div>
+                <div class="info-header">Player 1 (Blue)</div>
+                <div class="info-header">Player 2 (Red)</div>
+                <div class="info-label">Status</div>
+                <div id="p1Status">-</div>
+                <div id="p2Status">-</div>
+                <div class="info-label">Length</div>
+                <div id="p1Length">-</div>
+                <div id="p2Length">-</div>
+                <div class="info-label">Turn</div>
+                <div id="turnDisplay" colspan="2">- / -</div>
             </div>
         </div>
+    </div>
 
         <div id="submitModal" class="modal-overlay hidden">
             <div class="modal-content">

@@ -186,12 +186,22 @@ def main():
         p1_move, p2_move = p1_response["move"], p2_response["move"]
 
         # Record the detailed actions for this turn
+        # move_details_log.append({
+        #     "turn": turn,
+        #     "board_state_for_this_turn": current_state_for_bots,
+        #     "p1_response": p1_response,
+        #     "p2_response": p2_response
+        # })
+
         move_details_log.append({
             "turn": turn,
-            "board_state_for_this_turn": current_state_for_bots,
-            "p1_response": p1_response,
-            "p2_response": p2_response
+            "board_state": current_state_for_bots,
+            "responses": {
+                "p1": p1_response,
+                "p2": p2_response
+            }
         })
+
 
         # Disqualify bots that timed out or gave bad output (fairer penalty)
         if p1_response["error"]:
