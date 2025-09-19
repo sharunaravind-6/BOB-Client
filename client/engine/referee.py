@@ -19,10 +19,28 @@ MAX_TURNS = config.MAX_TURNS
 # -----------------------------------
 
 # ... (get_game_state and get_json_for_bot functions are unchanged) ...
+# def get_game_state(turn, board, p1, p2):
+#     return {
+#         "turn": turn,
+#         "board": { "width": board.width, "height": board.height },
+#         "p1": { "id": "p1", "head": {"x": p1.head[0], "y": p1.head[1]}, "body": [{"x": pos[0], "y": pos[1]} for pos in p1.body], "direction": p1.direction, "alive": p1.is_alive },
+#         "p2": { "id": "p2", "head": {"x": p2.head[0], "y": p2.head[1]}, "body": [{"x": pos[0], "y": pos[1]} for pos in p2.body], "direction": p2.direction, "alive": p2.is_alive }
+#     }
+
 def get_game_state(turn, board, p1, p2):
+    # Create a grid representation for the log
+    grid = [[0 for _ in range(board.height)] for _ in range(board.width)]
+    for part in p1.body: grid[part[0]][part[1]] = 1
+    for part in p2.body: grid[part[0]][part[1]] = 2
+    grid_str = ["".join(map(str, [grid[x][y] for x in range(board.width)])) for y in range(board.height)]
+
     return {
         "turn": turn,
-        "board": { "width": board.width, "height": board.height },
+        "board": { 
+            "width": board.width, 
+            "height": board.height,
+            "grid": grid_str  # The grid is now included
+        },
         "p1": { "id": "p1", "head": {"x": p1.head[0], "y": p1.head[1]}, "body": [{"x": pos[0], "y": pos[1]} for pos in p1.body], "direction": p1.direction, "alive": p1.is_alive },
         "p2": { "id": "p2", "head": {"x": p2.head[0], "y": p2.head[1]}, "body": [{"x": pos[0], "y": pos[1]} for pos in p2.body], "direction": p2.direction, "alive": p2.is_alive }
     }
