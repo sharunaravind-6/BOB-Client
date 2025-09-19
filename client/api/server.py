@@ -49,7 +49,7 @@ def run_match_in_background(match_id, p1_path, p2_path, opponent_selection):
         p2_dir = os.path.dirname(p2_path)
         p2_filename = os.path.basename(p2_path)
         _, p2_ext = os.path.splitext(p2_filename)
-        p2_lang = {".py": "python", ".java": "java"}.get(p2_ext)
+        p2_lang = {".py": "python", ".java": "java",".c": "c",".js": "javascript",".cpp": "cpp"}.get(p2_ext)
         if not p2_lang:
             match_results[match_id] = {"status": "error", "log": {"error": f"P2: Unsupported file type: {p2_ext}"}}
             return

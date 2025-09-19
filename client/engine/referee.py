@@ -170,6 +170,7 @@ def main():
         # Record the detailed actions for this turn
         move_details_log.append({
             "turn": turn,
+            "board_state_for_this_turn": current_state_for_bots,
             "p1_response": p1_response,
             "p2_response": p2_response
         })
