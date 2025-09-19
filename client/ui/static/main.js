@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = bgColor;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.strokeStyle = gridColor;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 0.3;
         for (let x = 0; x <= canvas.width; x += cellW) {
             ctx.beginPath();
             ctx.moveTo(x, 0);

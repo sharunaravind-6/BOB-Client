@@ -7,6 +7,7 @@ def main():
     """
     A simple bot that parses the game state and chooses a random, non-suicidal move.
     """
+    
     for line in sys.stdin:
         state = json.loads(line)
         

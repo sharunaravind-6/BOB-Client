@@ -222,7 +222,7 @@ button {
     padding: 15px;
     text-align: left;
     max-height: 400px;
-    overflow-y: auto;
+    overflow: auto;
     font-size: 1.05em;
 }
 #logContainer details {
